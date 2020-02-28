@@ -1,5 +1,7 @@
 import Dependencies._
 
+scalacOptions in ThisBuild ++= Seq("-deprecation", "-feature")
+
 ThisBuild / scalaVersion     := "2.13.1"
 ThisBuild / version          := "0.1.0-SNAPSHOT"
 ThisBuild / organization     := "org.kittrellcodeworks"

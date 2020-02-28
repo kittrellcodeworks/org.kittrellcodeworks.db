@@ -1,4 +1,7 @@
 package org.kittrellcodeworks
 
-package object db
-extends QuerySupport
+package object db extends QuerySupport {
+
+  type Query = QueryPart
+
+}

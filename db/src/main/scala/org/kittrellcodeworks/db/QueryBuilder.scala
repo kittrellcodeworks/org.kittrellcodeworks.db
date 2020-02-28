@@ -1,5 +1,7 @@
 package org.kittrellcodeworks.db
 
+import scala.language.implicitConversions
+
 sealed trait QueryBuilder {
   def result: QueryPart
 }
@@ -18,14 +20,19 @@ object QueryBuilder {
 
   object EmptyBuilder extends AddableQueryBuilder[SingleQueryBuilder] {
     private[db] def add(part: QueryPart): SingleQueryBuilder = new SingleQueryBuilder(part)
+
     def result: QueryPart = Empty
   }
 
   class SingleQueryBuilder(part: QueryPart) extends QueryBuilder {
     def result: QueryPart = part
+
     def and(field: String): FieldQueryBuilder[AndQueryBuilder] = new AndQueryBuilder and part and field
+
     def and(other: QueryPart): AndQueryBuilder = new AndQueryBuilder add part add other
+
     def or(field: String): FieldQueryBuilder[OrQueryBuilder] = new OrQueryBuilder or part or field
+
     def or(other: QueryPart): OrQueryBuilder = new OrQueryBuilder add part add other
   }
 
@@ -38,6 +45,7 @@ object QueryBuilder {
     }
 
     def and(field: String): FieldQueryBuilder[AndQueryBuilder] = new FieldQueryBuilder(this, field)
+
     def and(other: QueryPart): this.type = add(other)
 
     def result: QueryPart = if (parts.nonEmpty) AndQuery(parts.reverse) else Empty
@@ -52,6 +60,7 @@ object QueryBuilder {
     }
 
     def or(field: String): FieldQueryBuilder[OrQueryBuilder] = new FieldQueryBuilder(this, field)
+
     def or(other: QueryPart): this.type = add(other)
 
     def result: QueryPart = if (parts.nonEmpty) OrQuery(parts.reverse) else Empty

@@ -1,5 +1,7 @@
 package org.kittrellcodeworks.db
 
+import scala.language.implicitConversions
+
 trait QuerySupport {
 
   implicit def query(field: String): FieldQueryBuilder[QueryBuilder.SingleQueryBuilder] = QueryBuilder(field)

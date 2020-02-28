@@ -24,9 +24,9 @@ object QueryPart {
 case class OrQuery(parts: Seq[QueryPart]) extends QueryPart {
   override def simplify: QueryPart = {
     val newParts = parts.map(_.simplify).foldLeft(List.empty[QueryPart]) {
-      case (acc, Empty) ⇒ acc
-      case (acc, OrQuery(more)) ⇒ more.foldLeft(acc)(_.::(_))
-      case (acc, p) ⇒ p :: acc
+      case (acc, Empty) => acc
+      case (acc, OrQuery(more)) => more.foldLeft(acc)(_.::(_))
+      case (acc, p) => p :: acc
     }
     if (newParts.nonEmpty) OrQuery(newParts) else Empty
   }
@@ -41,33 +41,33 @@ case class OrQuery(parts: Seq[QueryPart]) extends QueryPart {
 case class AndQuery(parts: Seq[QueryPart]) extends QueryPart {
   override def simplify: QueryPart = {
     val newParts = parts.map(_.simplify).foldLeft(List.empty[QueryPart]) {
-      case (acc, Empty) ⇒ acc
-      case (acc, AndQuery(more)) ⇒ more.foldLeft(acc)(_.::(_))
-      case (acc, p) ⇒ p :: acc
+      case (acc, Empty) => acc
+      case (acc, AndQuery(more)) => more.foldLeft(acc)(_.::(_))
+      case (acc, p) => p :: acc
     }
     if (newParts.nonEmpty) AndQuery(newParts) else Empty
   }
 
   override def getField[T: ClassTag](field: String): Option[T] =
-    parts.toStream.flatMap(_.getField[T](field)).headOption
+    parts.to(LazyList).flatMap(_.getField[T](field)).headOption
 
   override def size: Int = parts.map(_.size).sum
 
   override protected def innerSplit(clauseLimit: Int): Seq[QueryPart] = {
     // NOTE - this destroys attempts to short-circuit comparisons
-    val (others0, maxSize, max) = parts.foldLeft((List.empty[QueryPart], 0, Empty:QueryPart)) {
-      case ((acc, maxSize, maxPart), or: OrQuery) if or.size > maxSize ⇒ (maxPart :: acc, or.size, or)
-      case ((acc, maxSize, maxPart), any: IsAnyOf) if any.size > maxSize ⇒ (maxPart :: acc, any.size, any)
-      case ((acc, maxSize, maxPart), part) ⇒ (part :: acc, maxSize, maxPart)
+    val (others0, maxSize0, max) = parts.foldLeft((List.empty[QueryPart], 0, Empty: QueryPart)) {
+      case ((acc, maxSize, maxPart), or: OrQuery) if or.size > maxSize => (maxPart :: acc, or.size, or)
+      case ((acc, maxSize, maxPart), any: IsAnyOf) if any.size > maxSize => (maxPart :: acc, any.size, any)
+      case ((acc, maxSize, maxPart), part) => (part :: acc, maxSize, maxPart)
     }
     val others = others0.filter(_ ne Empty)
     val split = max match {
-      case p@(_:OrQuery | _:IsAnyOf) if maxSize <= clauseLimit ⇒ p.split(clauseLimit)
-      case p ⇒ Seq(p)
+      case p@(_: OrQuery | _: IsAnyOf) if maxSize0 <= clauseLimit => p.split(clauseLimit)
+      case p => Seq(p)
     }
     split map {
-      case Empty ⇒ this
-      case p ⇒ AndQuery(p :: others)
+      case Empty => this
+      case p => AndQuery(p :: others)
     }
   }
 }
@@ -80,7 +80,7 @@ case class IsAnyOf(field: String, values: Iterable[Any]) extends QueryPart {
   override def size: Int = values.size
 
   override protected def innerSplit(clauseLimit: Int): Seq[QueryPart] = {
-    values.grouped(clauseLimit).toSeq.map(vs ⇒ copy(values = vs))
+    values.grouped(clauseLimit).toSeq.map(vs => copy(values = vs))
   }
 }
 
